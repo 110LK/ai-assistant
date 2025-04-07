@@ -6,7 +6,18 @@ spring:
       base-url: http://localhost:11434
       chat:
         model: deepseek-r1:1.5b
+  data:
+    redis:
+      host: 192.168.52.132
+      port: 6379
+      password: 154959
+      database: 0
+      lettuce:
+        pool:
+          max-idle: 16
+          max-active: 32
+          min-idle: 8
 logging:
   level:
-    org.springframework.ai.chat.client.advisor: debug
-    cn.wth.ai: debug
+    org.springframework.ai.chat.client.advisor: debug # AI???????
+    cn.wth.ai: debug  # ????????

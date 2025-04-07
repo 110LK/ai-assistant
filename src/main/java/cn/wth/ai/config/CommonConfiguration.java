@@ -1,5 +1,6 @@
 package cn.wth.ai.config;
 
+import cn.wth.ai.chat.RedisChatMemory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -18,11 +19,13 @@ import org.springframework.context.annotation.Configuration;
 public class CommonConfiguration {
 
     @Bean
-    public ChatClient chatClient(OllamaChatModel ollamaChatModel) {
+    public ChatClient chatClient(OllamaChatModel ollamaChatModel, RedisChatMemory redisChatMemory) {
         return ChatClient
-                .builder(ollamaChatModel)
+                .builder(ollamaChatModel)   // 创建ChatClient工厂实例
                 .defaultSystem("你是一个热心、可爱的智能助手，你的名字叫小五，请以小五的身份和语气回答问题。")
-                .defaultAdvisors(new SimpleLoggerAdvisor())
+                .defaultAdvisors(
+                        new SimpleLoggerAdvisor(),  // 历史会话保存到Redis中
+                        new MessageChatMemoryAdvisor(redisChatMemory)) // 添加默认的Advisor，记录日志
                 .build();
     }
 
