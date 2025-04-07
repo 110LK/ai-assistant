@@ -6,6 +6,12 @@ spring:
       base-url: http://localhost:11434
       chat:
         model: deepseek-r1:1.5b
+  openai:
+    base-url: https://dashscope.aliyuncs.com/compatible-mode
+    api-key: ${OPENAI_API_KEY}
+    chat:
+      options:
+        model: qwen-max-latest # 可选择的模型列表 https://help.aliyun.com/zh/model-studio/getting-started/models
   data:
     redis:
       host: 192.168.52.132
@@ -19,5 +25,5 @@ spring:
           min-idle: 8
 logging:
   level:
-    org.springframework.ai.chat.client.advisor: debug # AI???????
-    cn.wth.ai: debug  # ????????
+    org.springframework.ai.chat.client.advisor: debug # AI对话的日志级别
+    cn.wth.ai: debug  # 本项目的日志级别
