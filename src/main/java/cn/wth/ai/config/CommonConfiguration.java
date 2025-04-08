@@ -2,6 +2,7 @@ package cn.wth.ai.config;
 
 import cn.wth.ai.chat.RedisChatMemory;
 import cn.wth.ai.constants.SystemConstants;
+import cn.wth.ai.tools.CourseTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -41,6 +42,19 @@ public class CommonConfiguration {
                         new SimpleLoggerAdvisor(),
                         new MessageChatMemoryAdvisor(redisChatMemory)
                 )
+                .build();
+    }
+
+    @Bean
+    public ChatClient serviceChatClient(OpenAiChatModel model, RedisChatMemory redisChatMemory, CourseTools courseTools) {
+        return ChatClient
+                .builder(model)
+                .defaultSystem(SystemConstants.SERVICE_SYSTEM_PROMPT)
+                .defaultAdvisors(
+                        new SimpleLoggerAdvisor(),
+                        new MessageChatMemoryAdvisor(redisChatMemory)
+                )
+                .defaultTools(courseTools)
                 .build();
     }
 

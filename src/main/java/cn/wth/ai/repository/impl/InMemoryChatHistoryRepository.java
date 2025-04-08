@@ -20,6 +20,7 @@ import java.util.Set;
 @Repository
 @RequiredArgsConstructor
 public class InMemoryChatHistoryRepository implements ChatHistoryRepository {
+
     private final StringRedisTemplate redisTemplate;
 
     @Override

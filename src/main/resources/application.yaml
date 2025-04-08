@@ -23,7 +23,13 @@ spring:
           max-idle: 16
           max-active: 32
           min-idle: 8
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/ai_customer?serverTimezone=Asia/Shanghai&useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowPublicKeyRetrieval=true&allowMultiQueries=true&useServerPrepStmts=false
+    username: root
+    password: Wutaihang@666
 logging:
   level:
     org.springframework.ai.chat.client.advisor: debug # AI对话的日志级别
     cn.wth.ai: debug  # 本项目的日志级别
+#    org.springframework.ai: debug
