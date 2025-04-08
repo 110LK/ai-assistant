@@ -1,17 +1,42 @@
 spring:
   application:
     name: ai-assistant
+
   ai:
     ollama:
       base-url: http://localhost:11434
       chat:
         model: deepseek-r1:1.5b
+    vectorstore:
+      milvus:
+        # 数据库名
+        databaseName: vector_store
+        # 集合名
+        collectionName: knowledge_base
+        # 特征向量维度
+        embeddingDimension: 1024
+        # 索引类型（使用默认 IVF_FLAT）
+        indexType: IVF_FLAT
+        # 相似度计算方式（使用默认 COSINE）
+        metricType: COSINE
+        # 客户端连接
+        client:
+          host: http://localhost
+          port: 19530
+          username: root
+          password: milvus
+
   openai:
     base-url: https://dashscope.aliyuncs.com/compatible-mode
     api-key: ${OPENAI_API_KEY}
     chat:
       options:
         model: qwen-max-latest # 可选择的模型列表 https://help.aliyun.com/zh/model-studio/getting-started/models
+    embedding:
+      options:
+        model: text-embedding-v3  # 向量模型
+        dimensions: 1024  # 向量维度
+
   data:
     redis:
       host: 192.168.52.132
@@ -23,11 +48,13 @@ spring:
           max-idle: 16
           max-active: 32
           min-idle: 8
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://127.0.0.1:3306/ai_customer?serverTimezone=Asia/Shanghai&useSSL=false&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&transformedBitIsBoolean=true&tinyInt1isBit=false&allowPublicKeyRetrieval=true&allowMultiQueries=true&useServerPrepStmts=false
     username: root
     password: Wutaihang@666
+
 logging:
   level:
     org.springframework.ai.chat.client.advisor: debug # AI对话的日志级别
