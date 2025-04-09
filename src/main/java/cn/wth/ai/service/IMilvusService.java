@@ -2,6 +2,11 @@ package cn.wth.ai.service;
 
 import io.milvus.v2.service.vector.response.InsertResp;
 import io.milvus.v2.service.vector.response.SearchResp;
+import io.milvus.v2.service.vector.response.DeleteResp;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
+
+import java.util.List;
 
 /**
  * @Author: 5th
@@ -30,8 +35,33 @@ public interface IMilvusService {
      * 搜索数据
      *
      * @param vectorParam   向量参数
-     * @return
      */
     SearchResp search(float[] vectorParam);
 
+
+    /**
+     * 批量插入数据
+     *
+     * @param vectorParam 向量参数
+     * @param text        文本
+     * @param metadata    元数据
+     * @param fileName    文件名
+     */
+    InsertResp batchInsert(List<float[]> vectorParam, List<String> text, List<String> metadata, List<String> fileName);
+
+    /**
+     * 批量删除数据
+     *
+     * @param ids   id数组
+     */
+    DeleteResp delete(String[] ids);
+
+    /**
+     * 批量删除数据
+     *
+     * @param id    id
+     */
+    DeleteResp delete(String id);
+
+    List<Document> search(SearchRequest request);
 }

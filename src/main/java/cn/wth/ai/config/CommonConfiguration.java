@@ -1,18 +1,18 @@
 package cn.wth.ai.config;
 
 import cn.wth.ai.chat.RedisChatMemory;
-import cn.wth.ai.model.AlibabaOpenAiChatModel;
+import cn.wth.ai.customization.AlibabaOpenAiChatModel;
 import cn.wth.ai.constants.SystemConstants;
+import cn.wth.ai.customization.MilvusVectorStore;
 import cn.wth.ai.tools.CourseTools;
 import io.micrometer.observation.ObservationRegistry;
 import org.springframework.ai.autoconfigure.openai.OpenAiChatProperties;
 import org.springframework.ai.autoconfigure.openai.OpenAiConnectionProperties;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
+import org.springframework.ai.chat.client.advisor.QuestionAnswerAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
-import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.observation.ChatModelObservationConvention;
-import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.model.SimpleApiKey;
 import org.springframework.ai.model.tool.ToolCallingManager;
 import org.springframework.ai.ollama.OllamaChatModel;
@@ -75,6 +75,17 @@ public class CommonConfiguration {
                         new MessageChatMemoryAdvisor(redisChatMemory)
                 )
                 .defaultTools(courseTools)
+                .build();
+    }
+
+    @Bean
+    public ChatClient fileChatClient(AlibabaOpenAiChatModel model, RedisChatMemory redisChatMemory, MilvusVectorStore milvusVectorStore) {
+        return ChatClient.builder(model)
+                .defaultSystem("你是一个RAG知识库问答机器人，请根据上下文回答问题，遇到上下文没有的问题，不要随意编造。")
+                .defaultAdvisors(
+                        new MessageChatMemoryAdvisor(redisChatMemory),
+                        new QuestionAnswerAdvisor(milvusVectorStore)
+                )
                 .build();
     }
 

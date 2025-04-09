@@ -1,5 +1,6 @@
 package cn.wth.ai.config;
 
+import cn.wth.ai.customization.MessageRedisSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.ai.chat.messages.Message;

@@ -1,6 +1,6 @@
 package cn.wth.ai.service.impl;
 
-import cn.wth.ai.config.MilvusArchive;
+import cn.wth.ai.constants.MilvusArchive;
 import cn.wth.ai.service.IMilvusService;
 
 import com.google.gson.Gson;
@@ -11,16 +11,21 @@ import io.milvus.v2.common.IndexParam;
 
 import io.milvus.v2.service.collection.request.*;
 import io.milvus.v2.service.index.request.CreateIndexReq;
+import io.milvus.v2.service.vector.request.DeleteReq;
 import io.milvus.v2.service.vector.request.InsertReq;
 import io.milvus.v2.service.vector.request.SearchReq;
 import io.milvus.v2.service.vector.request.data.FloatVec;
+import io.milvus.v2.service.vector.response.DeleteResp;
 import io.milvus.v2.service.vector.response.InsertResp;
 import io.milvus.v2.service.vector.response.SearchResp;
 import lombok.RequiredArgsConstructor;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.openai.OpenAiEmbeddingModel;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @Author: 5th
@@ -32,6 +37,8 @@ import java.util.Collections;
 public class MilvusServiceImpl implements IMilvusService {
 
     private MilvusClientV2 milvusClientV2;
+
+    private final OpenAiEmbeddingModel embeddingModel;
 
     @Override
     public void hasCollection() {
@@ -82,6 +89,108 @@ public class MilvusServiceImpl implements IMilvusService {
         return milvusClientV2.search(searchReq);
 
     }
+
+    @Override
+    public InsertResp batchInsert(List<float[]> vectorParam, List<String> text, List<String> metadata, List<String> fileName) {
+        if (vectorParam.size() == text.size() && vectorParam.size() == metadata.size() && vectorParam.size() == fileName.size()) {
+            List<JsonObject> jsonObjects = new ArrayList<>();
+            for (int i = 0; i < vectorParam.size(); i++) {
+                JsonObject jsonObject = new JsonObject();
+                // 数组转换成JsonElement
+                jsonObject.add(MilvusArchive.Field.FEATURE, new Gson().toJsonTree(vectorParam.get(i)));
+                jsonObject.add(MilvusArchive.Field.TEXT, new Gson().toJsonTree(text.get(i)));
+                jsonObject.add(MilvusArchive.Field.METADATA, new Gson().toJsonTree(metadata.get(i)));
+                jsonObject.add(MilvusArchive.Field.FILE_NAME, new Gson().toJsonTree(fileName.get(i)));
+                jsonObjects.add(jsonObject);
+            }
+            InsertReq insertReq = InsertReq.builder()
+                    // 集合名称
+                    .collectionName(MilvusArchive.COLLECTION_NAME)
+                    .data(jsonObjects)
+                    .build();
+            return milvusClientV2.insert(insertReq);
+        }
+        return null;
+    }
+
+    @Override
+    public DeleteResp delete(String[] ids) {
+        // 将String数组转换为Long类型（假设输入的id是合法的Long类型字符串）
+        List<Long> idList = Arrays.stream(ids)
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
+
+        // 构建删除表达式
+        String expr = String.format("%s in %s", MilvusArchive.Field.ID, idList.toString());
+
+        // 构造删除请求
+        DeleteReq deleteReq = DeleteReq.builder()
+                .collectionName(MilvusArchive.COLLECTION_NAME)
+                .filter(expr)
+                .build();
+
+        return milvusClientV2.delete(deleteReq);
+    }
+
+    @Override
+    public DeleteResp delete(String id) {
+        // 将字符串ID转换为Long类型（根据主键字段类型）
+        Long longId = Long.parseLong(id);
+
+        // 构造删除表达式
+        String expr = String.format("%s == %d", MilvusArchive.Field.ID, longId);
+
+        // 构建删除请求
+        DeleteReq deleteReq = DeleteReq.builder()
+                .collectionName(MilvusArchive.COLLECTION_NAME)
+                .filter(expr)
+                .build();
+
+        return milvusClientV2.delete(deleteReq);
+    }
+
+    public List<Document> search(SearchRequest request) {
+        // 转换请求参数
+        float[] vectorParam = embeddingModel.embed(request.getQuery());
+        SearchResp search = search(vectorParam);
+        return convertSearchResponse(search);
+    }
+
+    public List<Document> convertSearchResponse(SearchResp searchResp) {
+        List<Document> documents = new ArrayList<>();
+
+        // 遍历每个搜索结果组
+        for (List<SearchResp.SearchResult> resultGroup : searchResp.getSearchResults()) {
+            for (SearchResp.SearchResult result : resultGroup) {
+                // 提取字段
+                Map<String, Object> metadata = new HashMap<>();
+                String content = "";
+
+                // 解析实体字段（根据集合定义的字段）
+                Map<String, Object> entity = result.getEntity();
+                if (entity.containsKey(MilvusArchive.Field.TEXT)) {
+                    content = entity.get(MilvusArchive.Field.TEXT).toString();
+                }
+                if (entity.containsKey(MilvusArchive.Field.ID)) {
+                    metadata.put("id", entity.get(MilvusArchive.Field.ID));
+                }
+                if (entity.containsKey(MilvusArchive.Field.METADATA)) {
+                    metadata.put("metadata", entity.get(MilvusArchive.Field.METADATA));
+                }
+                if (entity.containsKey(MilvusArchive.Field.FILE_NAME)) {
+                    metadata.put("filename", entity.get(MilvusArchive.Field.FILE_NAME));
+                }
+
+                // 添加相似度得分
+                metadata.put("similarityScore", result.getScore());
+
+                // 创建Spring AI文档对象
+                documents.add(new Document(content, metadata));
+            }
+        }
+        return documents;
+    }
+
 
     private void loadCollection() {
         LoadCollectionReq loadReq = LoadCollectionReq.builder()

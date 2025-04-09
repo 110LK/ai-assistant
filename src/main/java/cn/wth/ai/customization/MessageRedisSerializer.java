@@ -1,4 +1,4 @@
-package cn.wth.ai.config;
+package cn.wth.ai.customization;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;

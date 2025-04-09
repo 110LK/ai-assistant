@@ -1,4 +1,4 @@
-package cn.wth.ai.config;
+package cn.wth.ai.constants;
 
 /**
  * @Author: 5th

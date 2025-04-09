@@ -1,4 +1,4 @@
-package cn.wth.ai.model;
+package cn.wth.ai.customization;
 
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
